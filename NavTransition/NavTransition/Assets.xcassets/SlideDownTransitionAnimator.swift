@@ -9,6 +9,8 @@ class SlideDownTransitionAnimator: NSObject, UIViewControllerAnimatedTransitioni
         UIViewControllerTransitioningDelegate {
     //设置转场时间为0.5
     let duration = 0.5
+
+    var isPresent = false
     
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
         return duration
@@ -31,8 +33,11 @@ class SlideDownTransitionAnimator: NSObject, UIViewControllerAnimatedTransitioni
 
         let offScreenDown = CGAffineTransform(translationX: 0, y: contaier.frame.height)
 
-        //首先让toView离开Contaier
-        toView.transform = offScreenUp
+
+        if isPresent {
+            //让toView离开Contaier
+            toView.transform = offScreenUp
+        }
         //将2个视图加入到contaier
         contaier.addSubview(fromView)
         contaier.addSubview(toView)
@@ -43,10 +48,22 @@ class SlideDownTransitionAnimator: NSObject, UIViewControllerAnimatedTransitioni
                 initialSpringVelocity: 0.8,
                 options: [], animations: {
 
-            fromView.transform = offScreenDown
-            fromView.alpha = 0.5
-            toView.transform = CGAffineTransform.identity
-            toView.alpha = 1.0
+            if self.isPresent {
+
+                fromView.transform = offScreenDown
+                fromView.alpha = 0.5
+                toView.transform = CGAffineTransform.identity
+                toView.alpha = 1.0
+
+            } else {
+
+                fromView.transform = offScreenUp
+                fromView.alpha = 1.0
+                toView.transform = CGAffineTransform.identity
+                toView.alpha = 1.0
+            }
+
+
 
         },completion: { finished in
 
@@ -58,10 +75,12 @@ class SlideDownTransitionAnimator: NSObject, UIViewControllerAnimatedTransitioni
     func animationController(forPresented presented: UIViewController,
                              presenting: UIViewController,
                              source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        isPresent = true
         return self
     }
 
     func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        isPresent = false
         return self
     }
 }
