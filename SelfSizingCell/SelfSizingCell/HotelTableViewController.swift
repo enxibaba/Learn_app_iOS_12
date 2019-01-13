@@ -8,6 +8,11 @@
 
 import UIKit
 
+enum cellState {
+    case expanded
+    case collapsed
+}
+
 class HotelTableViewController: UITableViewController {
 
     private var hotels:[(name: String, address: String, description: String)] = [("Hatcher's Manor", "73 Prossers Road, Richmond, Clarence, Tasmania 7025, Australia", "Experience luxurious accommodation set amongst our 100 acre working farm and orchard on the beautiful Coal River just 20 Minutes from Hobart. Woodburn Farm is one of Tasmania's most historical farms. Granted to Gilbert Robertson, the Chief Constable of the Coal River area in the 1820's. Land for St Johns Church (the oldest Catholic Church in Australia) was donated by the second owner of Woodburn, Mr John Cassidy in the 1830's."),
@@ -22,6 +27,8 @@ class HotelTableViewController: UITableViewController {
 
     private var rssItems : [ArticeItem]?
 
+    private var cellStates: [cellState]?
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -33,6 +40,8 @@ class HotelTableViewController: UITableViewController {
         feedParser.parserFeed(feedUrl: "https://developer.apple.com/news/rss/news.rss", completionHander: { (rssItems: [ArticeItem]) -> Void in
 
             self.rssItems = rssItems
+            self.cellStates = [cellState](repeating: .collapsed, count: rssItems.count)
+
             OperationQueue.main.addOperation({ () -> Void in
                 self.tableView.reloadSections(IndexSet(integer: 0), with: .automatic)
 
@@ -73,13 +82,24 @@ class HotelTableViewController: UITableViewController {
             cell.addressLabel.text = item.description
             cell.descriptionLabel.text = item.pubDate
 
+            if let cellStates = cellStates {
+                cell.descriptionLabel.numberOfLines = (cellStates[indexPath.row] == .expanded) ? 0 : 4
+            }
 
         }
 
-
         return cell
     }
-    
 
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
 
+        let cell = tableView.cellForRow(at: indexPath) as! HotelTableViewCell
+
+        tableView.beginUpdates()
+        cell.addressLabel.numberOfLines = (cell.addressLabel.numberOfLines == 0) ? 4 : 0
+        cellStates?[indexPath.row] = (cell.addressLabel.numberOfLines == 0) ? .expanded : .collapsed
+        tableView.endUpdates()
+
+    }
 }

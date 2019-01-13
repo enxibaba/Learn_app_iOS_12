@@ -18,11 +18,13 @@ class HotelTableViewCell: UITableViewCell {
     @IBOutlet weak var addressLabel:UILabel! {
         didSet {
             addressLabel.adjustsFontForContentSizeCategory = true
+            addressLabel.numberOfLines = 4
         }
     }
     @IBOutlet weak var descriptionLabel:UILabel! {
         didSet {
             descriptionLabel.adjustsFontForContentSizeCategory = true
+
         }
     }
 
