@@ -20,11 +20,25 @@ class HotelTableViewController: UITableViewController {
         ("Bardessono", "6526 Yount Street, Yountville, CA 94599", "With our LEED Platinum certification, Bardessono is a 100% non-smoking property, inside and outside. This includes a ban on electronic cigarettes, as well. While we love all our guests, we put the needs of the environment first."),
         ("Islington Hotel", "321 Davey Street, Hobart, Tasmania 7000, Australia", "Islington is a very special, small, luxe hotel in Hobart with a long history and a large delightful garden, affording unique and stunning views of Mount Wellington. Decorated with fine art and furnished with antiques, Islington appeals to those who desire the very best in life. Surrounded by personalised service, presented in an atmosphere of serenity, luxury and tranquility.")]
 
+    private var rssItems : [ArticeItem]?
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
         tableView.estimatedRowHeight = 95.0
         tableView.rowHeight = UITableView.automaticDimension
+
+        let feedParser = FeedParser()
+
+        feedParser.parserFeed(feedUrl: "https://developer.apple.com/news/rss/news.rss", completionHander: { (rssItems: [ArticeItem]) -> Void in
+
+            self.rssItems = rssItems
+            OperationQueue.main.addOperation({ () -> Void in
+                self.tableView.reloadSections(IndexSet(integer: 0), with: .automatic)
+
+            })
+        })
+
 
     }
     
@@ -42,17 +56,26 @@ class HotelTableViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // Return the number of rows
-        return hotels.count
+
+        guard let rssItems = rssItems else {
+            return 0
+        }
+        return rssItems.count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! HotelTableViewCell
 
         // Configure the cell...
-        let hotel = hotels[indexPath.row]
-        cell.nameLabel.text = hotel.name
-        cell.addressLabel.text = hotel.address
-        cell.descriptionLabel.text = hotel.description
+        if let item: ArticeItem = rssItems?[indexPath.row]  {
+
+            cell.nameLabel.text = item.title
+            cell.addressLabel.text = item.description
+            cell.descriptionLabel.text = item.pubDate
+
+
+        }
+
 
         return cell
     }
