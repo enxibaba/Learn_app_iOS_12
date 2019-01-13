@@ -57,6 +57,26 @@ class LoginViewController: UIViewController {
         
     }
 
+    @IBAction func authenticateWithPassword() {
+
+        if emailTextField.text == "enxibaba@gmail.com" && passwordTextField.text == "123456" {
+            performSegue(withIdentifier: "showHomeScreen", sender: nil)
+        } else {
+            //摇晃提升密码错误
+            loginView.transform = CGAffineTransform(translationX: 25, y: 0)
+
+            UIView.animate(withDuration: 0.2,
+                    delay: 0,
+                    usingSpringWithDamping: 0.15,
+                    initialSpringVelocity: 0.3,
+                    options: .curveEaseInOut,
+                    animations: {
+
+                        self.loginView.transform = CGAffineTransform.identity
+
+                    }, completion:nil)
+        }
+    }
     // MARK: - get the authen
     func authenticateWithBiometric() {
         //取得本地授权类容
