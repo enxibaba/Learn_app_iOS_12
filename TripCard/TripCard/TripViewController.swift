@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Parse
 
 class TripViewController: UIViewController {
 
@@ -14,16 +15,7 @@ class TripViewController: UIViewController {
 
     @IBOutlet var collectionView: UICollectionView!
 
-    private var trips:[Trip] = [
-        Trip(tripId: "Paris001", city: "Paris", country: "France", featureImage: UIImage(named: "paris"), price: 2000, totalDays: 5, isLike: false),
-        Trip(tripId: "Rome001", city: "Rome", country: "Italy", featureImage: UIImage(named: "rome"), price: 800, totalDays: 3, isLike: false),
-        Trip(tripId: "Istanbul001", city: "Istanbul", country: "Turkey", featureImage: UIImage(named: "istanbul"), price: 2200, totalDays: 10, isLike: false),
-        Trip(tripId: "London001", city: "London", country: "United Kingdom", featureImage: UIImage(named: "london"), price: 3000, totalDays: 4, isLike: false),
-        Trip(tripId: "Sydney001", city: "Sydney", country: "Australia", featureImage: UIImage(named: "sydney"), price: 2500, totalDays: 8, isLike: false),
-        Trip(tripId: "Santorini001", city: "Santorini", country: "Greece", featureImage: UIImage(named: "santorini"), price: 1800, totalDays: 7, isLike: false),
-        Trip(tripId: "NewYork001", city: "New York", country: "United States", featureImage: UIImage(named: "newyork"), price: 900, totalDays: 3, isLike: false),
-        Trip(tripId: "Kyoto001", city: "Kyoto", country: "Japan", featureImage: UIImage(named: "kyoto"), price: 1000, totalDays: 5, isLike: false)
-    ]
+    private var trips = [Trip]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,6 +27,8 @@ class TripViewController: UIViewController {
         let blurEffectView = UIVisualEffectView(effect: blurEffect)
         blurEffectView.frame = view.bounds
         backgroundImageView.addSubview(blurEffectView)
+
+        loadTripsFromParse()
         
     }
 
@@ -45,6 +39,34 @@ class TripViewController: UIViewController {
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
+    }
+
+    func loadTripsFromParse() {
+
+        trips.removeAll(keepingCapacity: true)
+
+        collectionView.reloadData()
+
+        let query = PFQuery(className: "Trip")
+        query.cachePolicy = PFCachePolicy.networkElseCache
+        query.findObjectsInBackground{ (objects, error) -> Void in
+
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return
+            }
+
+            if let object = objects {
+
+                self.trips = object.map {
+                    Trip(pfObject: $0)
+                }
+
+                OperationQueue.main.addOperation{
+                    self.collectionView.reloadData()
+                }
+            }
+        }
     }
     
 }
@@ -64,10 +86,20 @@ extension TripViewController: UICollectionViewDelegate, UICollectionViewDataSour
         let trip = trips[indexPath.row]
         cell.cityLabel.text = trip.city
         cell.countryLabel.text = trip.country
-        cell.imageView.image = trip.featureImage
+        //cell.imageView.image = trip.featuredImage
+
+        cell.imageView.image = UIImage()
+        if let featuredImage = trips[indexPath.row].featuredImage {
+            featuredImage.getDataInBackground(block: { (imageData, error) in
+                if let tripImageData = imageData {
+                    cell.imageView.image = UIImage(data: tripImageData)
+                }
+            })
+        }
+
         cell.priceLabel.text = "$\(String(trip.price))"
         cell.totalDaysLabel.text = "\(trip.totalDays) days"
-        cell.isLiked = trip.isLike
+        cell.isLiked = trip.isLiked
 
         cell.layer.cornerRadius = 4.0
         return cell
@@ -77,8 +109,8 @@ extension TripViewController: UICollectionViewDelegate, UICollectionViewDataSour
 extension TripViewController: TripCollectionCellDelegate {
     func didLikeButtonPressed(cell: TripCollectionCell) {
         if let indexPath = collectionView.indexPath(for: cell) {
-            trips[indexPath.row].isLike = trips[indexPath.row].isLike ? false : true
-            cell.isLiked = trips[indexPath.row].isLike
+            trips[indexPath.row].isLiked = trips[indexPath.row].isLiked ? false : true
+            cell.isLiked = trips[indexPath.row].isLiked
         }
     }
     
