@@ -28,6 +28,7 @@ class TripViewController: UIViewController {
         blurEffectView.frame = view.bounds
         backgroundImageView.addSubview(blurEffectView)
 
+        addSwipeUpRecognize()
         loadTripsFromParse()
         
     }
@@ -40,6 +41,21 @@ class TripViewController: UIViewController {
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
+    
+    
+    func addSwipeUpRecognize() {
+        
+        //设定滑动手势
+        let swipeUpRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(gesture:)))
+        
+        swipeUpRecognizer.direction = .up
+        
+        swipeUpRecognizer.delegate = self as? UIGestureRecognizerDelegate
+        
+        self.collectionView.addGestureRecognizer(swipeUpRecognizer)
+        
+        
+    }
 
     func loadTripsFromParse() {
 
@@ -48,6 +64,7 @@ class TripViewController: UIViewController {
         collectionView.reloadData()
 
         let query = PFQuery(className: "Trip")
+        //读取失败从缓存读取
         query.cachePolicy = PFCachePolicy.networkElseCache
         query.findObjectsInBackground{ (objects, error) -> Void in
 
@@ -111,8 +128,49 @@ extension TripViewController: TripCollectionCellDelegate {
         if let indexPath = collectionView.indexPath(for: cell) {
             trips[indexPath.row].isLiked = trips[indexPath.row].isLiked ? false : true
             cell.isLiked = trips[indexPath.row].isLiked
+            
+            //更新在Parse上的旅游资料
+            
+            trips[indexPath.row].toPFObject().saveInBackground(block: { (success, error) -> Void in
+                
+                if success {
+                    print("Successfully updated the trip")
+                } else {
+                    print("Error: \(error?.localizedDescription ?? "Unknown error")")
+                }
+                
+            })
         }
     }
     
     
+}
+
+extension TripViewController: UIGestureRecognizerDelegate {
+    
+    @objc func handleSwipe(gesture: UISwipeGestureRecognizer) {
+        
+        let point = gesture.location(in: self.collectionView)
+        
+        if (gesture.state == UIGestureRecognizerState.ended) {
+            
+            if let indexPath = collectionView.indexPathForItem(at: point) {
+                // 从Parse移除
+                trips[indexPath.row].toPFObject().deleteInBackground(block: { (success, error) -> Void in
+                    
+                    if success {
+                        print("Successfully removed the trip")
+                    } else {
+                        print("Error: \(error?.localizedDescription ?? "Unknown error")")
+                        return
+                    }
+                    
+                    self.trips.remove(at: indexPath.row)
+                    
+                    self.collectionView.deleteItems(at: [indexPath])
+                    
+                })
+            }
+        }
+    }
 }
