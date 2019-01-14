@@ -7,6 +7,8 @@ target 'TripCard' do
 
   # Pods for TripCard
   pod 'Parse'
+  pod 'LeanCloud'
+  pod 'Kingfisher'
 
 
 end

@@ -1,22 +1,43 @@
 PODS:
+  - Alamofire (4.8.0)
   - Bolts/Tasks (1.9.0)
+  - Kingfisher (5.0.1)
+  - LeanCloud (15.0.0):
+    - LeanCloud/Foundation (= 15.0.0)
+    - LeanCloud/LocalStorage (= 15.0.0)
+    - LeanCloud/Storage (= 15.0.0)
+  - LeanCloud/Foundation (15.0.0)
+  - LeanCloud/LocalStorage (15.0.0):
+    - LeanCloud/Foundation
+  - LeanCloud/Storage (15.0.0):
+    - Alamofire (~> 4.8.0)
+    - LeanCloud/Foundation
+    - LeanCloud/LocalStorage
   - Parse (1.17.2):
     - Parse/Core (= 1.17.2)
   - Parse/Core (1.17.2):
     - Bolts/Tasks (~> 1.9)
 
 DEPENDENCIES:
+  - Kingfisher
+  - LeanCloud
   - Parse
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
+    - Alamofire
     - Bolts
+    - Kingfisher
+    - LeanCloud
     - Parse
 
 SPEC CHECKSUMS:
+  Alamofire: 3ec537f71edc9804815215393ae2b1a8ea33a844
   Bolts: ac6567323eac61e203f6a9763667d0f711be34c8
+  Kingfisher: 4f771421b9208185217550528a06fd48756cb7c2
+  LeanCloud: 62fe4e615494425081fd719c0d56fae130f764ea
   Parse: 3b31a3dd1777b07ee7f0caee32fafbff544483a5
 
-PODFILE CHECKSUM: 3c2e28fd08d71db8773b1e2d204f57d25e70db5a
+PODFILE CHECKSUM: 07911433abf1b52054688717c7c771155471c046
 
 COCOAPODS: 1.5.2

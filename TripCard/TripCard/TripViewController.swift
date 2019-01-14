@@ -8,18 +8,32 @@
 
 import UIKit
 import Parse
+import LeanCloud
+import Alamofire
+import Kingfisher
+
+enum RequestType {
+    case Parse
+    case LearnCode
+}
 
 class TripViewController: UIViewController {
 
     @IBOutlet var backgroundImageView: UIImageView!
 
     @IBOutlet var collectionView: UICollectionView!
+    
+    private var currentRequestType: RequestType = .Parse
 
     private var trips = [Trip]()
+    
+    private var tripLearnCodes = [TripLearn]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        currentRequestType = .LearnCode
+        
         collectionView.backgroundColor = UIColor.clear
         // Apply blurring effect
         backgroundImageView.image = UIImage(named: "cloud")
@@ -27,9 +41,18 @@ class TripViewController: UIViewController {
         let blurEffectView = UIVisualEffectView(effect: blurEffect)
         blurEffectView.frame = view.bounds
         backgroundImageView.addSubview(blurEffectView)
-
+        
+        
+        
         addSwipeUpRecognize()
-        loadTripsFromParse()
+        
+        switch currentRequestType {
+        case .Parse:
+            loadTripsFromParse()
+        case .LearnCode:
+            loadTripsFromLearnCode()
+        }
+        
         
     }
 
@@ -55,6 +78,35 @@ class TripViewController: UIViewController {
         self.collectionView.addGestureRecognizer(swipeUpRecognizer)
         
         
+    }
+    
+    func loadTripsFromLearnCode() {
+        
+        trips.removeAll(keepingCapacity: true)
+        
+        collectionView.reloadData()
+        
+        let query = LCQuery(className: "Trip")
+        let _ = query.find { (result) in
+            
+            switch result {
+            case .success:
+                
+                if let object = result.objects {
+                    
+                    self.tripLearnCodes = object.map {
+                        TripLearn(pfObject: $0)
+                    }
+                    
+                    self.collectionView.reloadData()
+                    
+                }
+                
+            case .failure(error: let error):
+                print("error: \(error.localizedDescription)")
+            }
+            
+        }
     }
 
     func loadTripsFromParse() {
@@ -94,29 +146,66 @@ extension TripViewController: UICollectionViewDelegate, UICollectionViewDataSour
     }
 
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return trips.count
+        
+        switch currentRequestType {
+        case .Parse:
+            return trips.count
+        case .LearnCode:
+            return tripLearnCodes.count
+        }
     }
 
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! TripCollectionCell
         cell.delegate = self
-        let trip = trips[indexPath.row]
-        cell.cityLabel.text = trip.city
-        cell.countryLabel.text = trip.country
-        //cell.imageView.image = trip.featuredImage
-
-        cell.imageView.image = UIImage()
-        if let featuredImage = trips[indexPath.row].featuredImage {
-            featuredImage.getDataInBackground(block: { (imageData, error) in
-                if let tripImageData = imageData {
-                    cell.imageView.image = UIImage(data: tripImageData)
-                }
-            })
+        
+        
+        switch currentRequestType {
+        case .Parse:
+        
+            let trip = trips[indexPath.row]
+            cell.cityLabel.text = trip.city
+            cell.countryLabel.text = trip.country
+            //cell.imageView.image = trip.featuredImage
+            
+            cell.imageView.image = UIImage()
+            if let featuredImage = trips[indexPath.row].featuredImage {
+                featuredImage.getDataInBackground(block: { (imageData, error) in
+                    if let tripImageData = imageData {
+                        cell.imageView.image = UIImage(data: tripImageData)
+                    }
+                })
+            }
+            
+            cell.priceLabel.text = "$\(String(trip.price))"
+            cell.totalDaysLabel.text = "\(trip.totalDays) days"
+            cell.isLiked = trip.isLiked
+        
+        case .LearnCode:
+            
+            let trip = tripLearnCodes[indexPath.row]
+            cell.cityLabel.text = trip.city.stringValue!
+            cell.countryLabel.text = trip.country.stringValue!
+            //cell.imageView.image = trip.featuredImage
+            
+            cell.imageView.image = UIImage()
+            
+            
+            
+            if let featuredImage: String = tripLearnCodes[indexPath.row].featuredImage?.url?.stringValue {
+                let url = URL(string: featuredImage)
+                cell.imageView.kf.setImage(with: url)
+            }
+            
+            cell.priceLabel.text = "$\(String(describing: trip.price.intValue!))"
+            cell.totalDaysLabel.text = "\(String(describing: trip.totalDays.intValue!)) days"
+            cell.isLiked = trip.isLiked.boolValue ?? false
+            
         }
-
-        cell.priceLabel.text = "$\(String(trip.price))"
-        cell.totalDaysLabel.text = "\(trip.totalDays) days"
-        cell.isLiked = trip.isLiked
+        
+        
+        
+        
 
         cell.layer.cornerRadius = 4.0
         return cell

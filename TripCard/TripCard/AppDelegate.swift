@@ -8,11 +8,19 @@
 
 import UIKit
 import Parse
+import LeanCloud
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    
+    func initializeLearnCode() {
+        
+        LCApplication.default.set(
+            id: "8O27tVRrs6EPllV6lqWjw92k-gzGzoHsz",
+            key: "BdU3FO4VDHbXbMIOxKHMOo8a")
+    }
 
      func initializeParse() {
 
@@ -29,8 +37,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        initializeParse()
-
+        //User Parse
+        //initializeParse()
+        // Use LearnCode
+        initializeLearnCode()
+        //
         return true
     }
 
